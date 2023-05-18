@@ -9,7 +9,7 @@ flutter_reactive_ble 라이브러리를 사용하여 BleScan앱 개발
 </p>
 
 <p align="center">
-<img src="https://github.com/Urusung/BleScan/issues/1#issue-1715050829">
+<img src="https://github.com/Urusung/BleScan/issues/1">
 </p>
 
 <br>
