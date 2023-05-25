@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:ble_scan/layout/default_layout.dart';
 import 'package:ble_scan/provider/ble_scan_provider.dart';
+import 'package:ble_scan/provider/rssi_slider_provider.dart';
+import 'package:ble_scan/provider/sort_button_state_provider.dart';
+import 'package:ble_scan/widget/filter_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +36,8 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
   Widget build(BuildContext context) {
     final discoverDeviceList = ref.watch(BleDiscoverDeviceProvider);
     final isScanState = ref.watch(BleScanStateProvider);
+    final isSortButtonState = ref.watch(SortButtonStateProvider);
+
     double deviceListWidth = MediaQuery.of(context).size.width - 16;
     double deviceListHeight = MediaQuery.of(context).size.width / 6;
     double rssiContainerWidth =
@@ -49,22 +53,51 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
       title: 'Bluetooth Scan',
       leading: IconButton(
         icon: Icon(
-          Icons.refresh_rounded,
+          Icons.filter_alt_rounded,
           size: AppBar().preferredSize.height / 2,
           color: Colors.white,
         ),
         onPressed: () {
-          discoverDeviceList.clear();
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return FilterWidget();
+              });
         },
       ),
       actions: [
-        IconButton(
-          icon: Icon(
-            Icons.filter_alt_rounded,
-            size: AppBar().preferredSize.height / 2,
-            color: Colors.white,
+        TextButton(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                isSortButtonState == true
+                    ? CupertinoIcons.sort_up
+                    : CupertinoIcons.sort_down,
+                size: AppBar().preferredSize.height / 2,
+                color: Colors.white,
+              ),
+              Text(
+                'RSSI',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AppBar().preferredSize.height / 6,
+                    fontWeight: FontWeight.bold),
+              )
+            ],
           ),
-          onPressed: () {},
+          onPressed: () {
+            final discoverDeviceList = ref.read(BleDiscoverDeviceProvider);
+
+            ref
+                .read(SortButtonStateProvider.notifier)
+                .update((state) => !isSortButtonState);
+
+            isSortButtonState == true
+                ? discoverDeviceList.sort((a, b) => a.rssi.compareTo(b.rssi))
+                : discoverDeviceList.sort((a, b) => b.rssi.compareTo(a.rssi));
+          },
         ),
       ],
       body: discoverDeviceList.isEmpty
@@ -107,132 +140,185 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
                   ),
                 )
           : Padding(
-              padding: EdgeInsets.only(top: 8.0, right: 8, left: 8),
-              child: ListView(
-                children: discoverDeviceList
-                    .map(
-                      (e) => Container(
-                        width: deviceListWidth,
-                        height: deviceListHeight,
-                        margin: EdgeInsets.only(bottom: 8.0),
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.all(12.0),
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(deviceListWidth / 30),
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: deviceListHeight * 0.64,
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+              padding: EdgeInsets.only(top: 8.0, right: 8.0, left: 8.0),
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.zero,
+                      hintText: '검색하고 싶은 장비 이름',
+                      hintStyle: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[400]),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey[400],
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          Icons.clear,
+                          color: Colors.grey[400],
+                        ),
+                        onPressed: () {},
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(deviceListWidth / 30),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 8.0),
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: Colors.blue[400],
+                      onRefresh: () {
+                        discoverDeviceList.clear();
+                        return Future.delayed(Duration(seconds: 1));
+                      },
+                      child: ListView(
+                        children: discoverDeviceList
+                            .map(
+                              (e) => Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                      deviceListWidth / 30),
+                                  color: Colors.white,
+                                ),
+                                width: deviceListWidth,
+                                height: deviceListHeight,
+                                padding: EdgeInsets.all(deviceListHeight / 10),
+                                margin: EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Row(
+                                    SizedBox(
+                                      width: deviceListHeight * 0.64,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          rssiContainerWidth /
+                                                              2),
+                                                  color: e.rssi > -90
+                                                      ? Colors.blue[400]
+                                                      : Colors.grey[400],
+                                                ),
+                                                margin: EdgeInsets.all(1.0),
+                                                width: rssiContainerWidth,
+                                                height: rssiContainerHeight,
+                                              ),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          rssiContainerWidth /
+                                                              2),
+                                                  color: e.rssi > -80
+                                                      ? Colors.blue[400]
+                                                      : Colors.grey[400],
+                                                ),
+                                                margin: EdgeInsets.all(1.0),
+                                                width: rssiContainerWidth,
+                                                height:
+                                                    rssiContainerHeight * 1.8,
+                                              ),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          rssiContainerWidth /
+                                                              2),
+                                                  color: e.rssi > -70
+                                                      ? Colors.blue[400]
+                                                      : Colors.grey[400],
+                                                ),
+                                                margin: EdgeInsets.all(1.0),
+                                                width: rssiContainerWidth,
+                                                height:
+                                                    rssiContainerHeight * 2.8,
+                                              ),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          rssiContainerWidth /
+                                                              2),
+                                                  color: e.rssi > -60
+                                                      ? Colors.blue[400]
+                                                      : Colors.grey[400],
+                                                ),
+                                                margin: EdgeInsets.all(1.0),
+                                                width: rssiContainerWidth,
+                                                height:
+                                                    rssiContainerHeight * 3.6,
+                                              ),
+                                            ],
+                                          ),
+                                          Text(
+                                            '${e.rssi}db',
+                                            style: TextStyle(
+                                                color: Colors.grey[700],
+                                                fontWeight: FontWeight.w500,
+                                                fontSize:
+                                                    deviceListHeight * 0.18),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          right: deviceListWidth / 20),
+                                    ),
+                                    Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                          MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                                rssiContainerWidth / 2),
-                                            color: e.rssi > -90
-                                                ? Colors.blue[400]
-                                                : Colors.grey[400],
-                                          ),
-                                          margin: EdgeInsets.all(1.0),
-                                          width: rssiContainerWidth,
-                                          height: rssiContainerHeight,
+                                        Text(
+                                          e.name,
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: deviceListHeight * 0.26,
+                                              fontWeight: FontWeight.w600),
                                         ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                                rssiContainerWidth / 2),
-                                            color: e.rssi > -80
-                                                ? Colors.blue[400]
-                                                : Colors.grey[400],
-                                          ),
-                                          margin: EdgeInsets.all(1.0),
-                                          width: rssiContainerWidth,
-                                          height: rssiContainerHeight * 1.8,
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                                rssiContainerWidth / 2),
-                                            color: e.rssi > -70
-                                                ? Colors.blue[400]
-                                                : Colors.grey[400],
-                                          ),
-                                          margin: EdgeInsets.all(1.0),
-                                          width: rssiContainerWidth,
-                                          height: rssiContainerHeight * 2.8,
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                                rssiContainerWidth / 2),
-                                            color: e.rssi > -60
-                                                ? Colors.blue[400]
-                                                : Colors.grey[400],
-                                          ),
-                                          margin: EdgeInsets.all(1.0),
-                                          width: rssiContainerWidth,
-                                          height: rssiContainerHeight * 3.6,
+                                        Text(
+                                          e.id,
+                                          style: TextStyle(
+                                              color: Colors.grey[700],
+                                              fontSize: deviceListHeight * 0.18,
+                                              fontWeight: FontWeight.w500),
                                         ),
                                       ],
-                                    ),
-                                    Text(
-                                      '${e.rssi}db',
-                                      style: TextStyle(
-                                          color: Colors.grey[700],
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: deviceListHeight * 0.18),
                                     ),
                                   ],
                                 ),
                               ),
-                              Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    e.name,
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: deviceListHeight * 0.26,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  Text(
-                                    e.id,
-                                    style: TextStyle(
-                                        color: Colors.grey[700],
-                                        fontSize: deviceListHeight * 0.18,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                              Icon(Icons.arrow_forward_ios_rounded,
-                                  size: deviceListHeight * 0.34,
-                                  color: Colors.grey[400])
-                            ],
-                          ),
-                          onPressed: () {},
-                        ),
+                            )
+                            .toList(),
                       ),
-                    )
-                    .toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
     );
