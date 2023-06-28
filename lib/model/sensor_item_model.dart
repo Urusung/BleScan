@@ -9,6 +9,7 @@ class SensorItemModel {
   final List<Uuid> serviceUuids;
   final Uint8List manufacturerData;
   final int rssi;
+  final String deviceScanTime;
 
   SensorItemModel({
     required this.id,
@@ -17,5 +18,6 @@ class SensorItemModel {
     required this.manufacturerData,
     required this.rssi,
     required this.serviceUuids,
+    required this.deviceScanTime,
   });
 }

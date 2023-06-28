@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
       isAppBar: false,
       isOnWillPop: false,
       isAutomaticallyImplyLeading: false,
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromARGB(255, 1, 131, 255),
       title: '',
       body: Center(
         child: Image.asset(

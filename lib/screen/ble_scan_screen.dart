@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 
 import 'package:ble_scan/layout/default_layout.dart';
 import 'package:ble_scan/provider/ble_scan_provider.dart';
-import 'package:ble_scan/provider/rssi_slider_provider.dart';
 import 'package:ble_scan/provider/sort_button_state_provider.dart';
 import 'package:ble_scan/widget/filter_widget.dart';
 import 'package:flutter/cupertino.dart';
@@ -39,10 +39,11 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
     final isSortButtonState = ref.watch(SortButtonStateProvider);
 
     double deviceListWidth = MediaQuery.of(context).size.width - 16;
-    double deviceListHeight = MediaQuery.of(context).size.width / 6;
+    double deviceListHeight = MediaQuery.of(context).size.width / 5.6;
     double rssiContainerWidth =
         (MediaQuery.of(context).size.width - 16) * 0.008;
     double rssiContainerHeight = (MediaQuery.of(context).size.width / 6) * 0.1;
+    TextEditingController searchDeviceController = TextEditingController();
 
     return DefaultLayout(
       isAppBar: true,
@@ -144,6 +145,7 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
               child: Column(
                 children: [
                   TextField(
+                    controller: searchDeviceController,
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.zero,
                       hintText: '검색하고 싶은 장비 이름',
@@ -192,126 +194,277 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
                                 ),
                                 width: deviceListWidth,
                                 height: deviceListHeight,
-                                padding: EdgeInsets.all(deviceListHeight / 10),
+                                padding: EdgeInsets.all(deviceListHeight / 8),
                                 margin: EdgeInsets.only(bottom: 8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: deviceListHeight * 0.64,
-                                      child: Column(
+                                child: DateTime.parse(DateFormat(
+                                                    'yyyy-MM-dd HH:mm:ss')
+                                                .format(DateTime.now()))
+                                            .difference(DateTime.parse(
+                                                e.deviceScanTime))
+                                            .inSeconds >
+                                        30
+                                    ? Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                            MainAxisAlignment.start,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                            CrossAxisAlignment.end,
                                         children: [
-                                          Row(
+                                          SizedBox(
+                                            width: deviceListHeight * 0.64,
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.end,
+                                                  children: [
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight *
+                                                              1.8,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight *
+                                                              2.8,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight *
+                                                              3.6,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Text(
+                                                  '---',
+                                                  style: TextStyle(
+                                                      color: Colors.grey[400],
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize:
+                                                          deviceListHeight *
+                                                              0.18),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                right: deviceListWidth / 20),
+                                          ),
+                                          Column(
                                             mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                                MainAxisAlignment.spaceBetween,
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.end,
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          rssiContainerWidth /
-                                                              2),
-                                                  color: e.rssi > -90
-                                                      ? Colors.blue[400]
-                                                      : Colors.grey[400],
-                                                ),
-                                                margin: EdgeInsets.all(1.0),
-                                                width: rssiContainerWidth,
-                                                height: rssiContainerHeight,
+                                              Text(
+                                                e.name,
+                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize:
+                                                        deviceListHeight * 0.26,
+                                                    fontWeight:
+                                                        FontWeight.w600),
                                               ),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          rssiContainerWidth /
-                                                              2),
-                                                  color: e.rssi > -80
-                                                      ? Colors.blue[400]
-                                                      : Colors.grey[400],
-                                                ),
-                                                margin: EdgeInsets.all(1.0),
-                                                width: rssiContainerWidth,
-                                                height:
-                                                    rssiContainerHeight * 1.8,
-                                              ),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          rssiContainerWidth /
-                                                              2),
-                                                  color: e.rssi > -70
-                                                      ? Colors.blue[400]
-                                                      : Colors.grey[400],
-                                                ),
-                                                margin: EdgeInsets.all(1.0),
-                                                width: rssiContainerWidth,
-                                                height:
-                                                    rssiContainerHeight * 2.8,
-                                              ),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          rssiContainerWidth /
-                                                              2),
-                                                  color: e.rssi > -60
-                                                      ? Colors.blue[400]
-                                                      : Colors.grey[400],
-                                                ),
-                                                margin: EdgeInsets.all(1.0),
-                                                width: rssiContainerWidth,
-                                                height:
-                                                    rssiContainerHeight * 3.6,
+                                              Text(
+                                                e.id,
+                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize:
+                                                        deviceListHeight * 0.18,
+                                                    fontWeight:
+                                                        FontWeight.w500),
                                               ),
                                             ],
                                           ),
-                                          Text(
-                                            '${e.rssi}db',
-                                            style: TextStyle(
-                                                color: Colors.grey[700],
-                                                fontWeight: FontWeight.w500,
-                                                fontSize:
-                                                    deviceListHeight * 0.18),
+                                        ],
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          SizedBox(
+                                            width: deviceListHeight * 0.64,
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.end,
+                                                  children: [
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: e.rssi > -90
+                                                            ? Colors.blue[400]
+                                                            : Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: e.rssi > -80
+                                                            ? Colors.blue[400]
+                                                            : Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight *
+                                                              1.8,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: e.rssi > -70
+                                                            ? Colors.blue[400]
+                                                            : Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight *
+                                                              2.8,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                rssiContainerWidth /
+                                                                    2),
+                                                        color: e.rssi > -60
+                                                            ? Colors.blue[400]
+                                                            : Colors.grey[400],
+                                                      ),
+                                                      margin:
+                                                          EdgeInsets.all(1.0),
+                                                      width: rssiContainerWidth,
+                                                      height:
+                                                          rssiContainerHeight *
+                                                              3.6,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Text(
+                                                  '${e.rssi}db',
+                                                  style: TextStyle(
+                                                      color: Colors.grey[700],
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize:
+                                                          deviceListHeight *
+                                                              0.18),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                right: deviceListWidth / 20),
+                                          ),
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                e.name,
+                                                style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize:
+                                                        deviceListHeight * 0.26,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                              Text(
+                                                e.id,
+                                                style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize:
+                                                        deviceListHeight * 0.18,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          right: deviceListWidth / 20),
-                                    ),
-                                    Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          e.name,
-                                          style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: deviceListHeight * 0.26,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                        Text(
-                                          e.id,
-                                          style: TextStyle(
-                                              color: Colors.grey[700],
-                                              fontSize: deviceListHeight * 0.18,
-                                              fontWeight: FontWeight.w500),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
                               ),
                             )
                             .toList(),
@@ -328,7 +481,7 @@ class _BleScanScreenState extends ConsumerState<BleScanScreen> {
     print('startscan');
     ref
         .read(BleDiscoverDeviceProvider.notifier)
-        .startDiscoverDevice(deviceName);
+        .startDiscoverDevice(deviceName, -100);
 
     ref.read(BleScanStateProvider.notifier).startScan();
 

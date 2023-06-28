@@ -1,3 +1,4 @@
+import 'package:ble_scan/provider/ble_scan_provider.dart';
 import 'package:ble_scan/provider/rssi_slider_provider.dart';
 import 'package:ble_scan/provider/rssi_switch_button_provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -107,38 +108,7 @@ class FilterWidget extends ConsumerWidget {
                   ),
                   SizedBox(
                     width: alertWidth,
-                    height: alertHeight / 16,
-                    child: ElevatedButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.grey[200],
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            alertWidth / 26,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        '취소',
-                        style: TextStyle(
-                          fontSize: alertHeight / 52,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: 8.0,
-                    ),
-                  ),
-                  SizedBox(
-                    width: alertWidth,
-                    height: alertHeight / 16,
+                    height: alertHeight / 18,
                     child: ElevatedButton(
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.blue[400],
@@ -150,7 +120,7 @@ class FilterWidget extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        '저장',
+                        '확인',
                         style: TextStyle(
                           fontSize: alertHeight / 52,
                           color: Colors.white,
@@ -159,6 +129,17 @@ class FilterWidget extends ConsumerWidget {
                       ),
                       onPressed: () {
                         Navigator.of(context).pop();
+                        ref.read(BleDiscoverDeviceProvider).clear();
+                        ref.read(BleScanStateProvider.notifier).stopScan();
+                        ref
+                            .read(BleDiscoverDeviceProvider.notifier)
+                            .startDiscoverDevice(
+                                '',
+                                rssiSwitchValue == true
+                                    ? rssiSliderValue
+                                    : -100);
+
+                        ref.read(BleScanStateProvider.notifier).startScan();
                       },
                     ),
                   ),
